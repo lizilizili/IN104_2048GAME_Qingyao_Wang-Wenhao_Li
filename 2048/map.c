@@ -30,18 +30,21 @@ int move_up(int a[][4])
 		for(i=1;i<4;i++)
 		{
 
-			if(a[i-1][j]==a[i][j] && a[i-1][j])
-			{
-				a[i-1][j]+=1;
-				a[i][j]=0;
-				succeed=1;
-			}
 			if(a[i-1][j]==0)
 				for(k=i;k<4;k++)
 				{
 					a[k-1][j]=a[k][j];
 					a[k][j]=0;
 				}
+			if(a[i-1][j]==a[i][j] && a[i-1][j])
+			{
+				a[i-1][j]+=1;
+				a[i][j]=0;
+				succeed=1;
+			}
+			
+			
+			
 		
 		}
 	}
@@ -73,18 +76,20 @@ int move_down(int a[][4])
 		}
 		for(i=2;i>=0;i--)
 		{
+			
+			if(a[i+1][j]==0)
+				for(k=i+1;k>=1;k--)
+				{
+					a[k][j]=a[k-1][j];
+					a[k-1][j]=0;
+				}
 			if(a[i+1][j]==a[i][j] && a[i+1][j])
 			{
 				a[i+1][j]+=1;
 				a[i][j]=0;
 				succeed=1;
 			}
-			if(a[i][j]==0)
-				for(k=i;k>=1;k--)
-				{
-					a[k][j]=a[k-1][j];
-					a[k-1][j]=0;
-				}
+			
 			
 		}
 	}
@@ -117,18 +122,19 @@ int move_left(int a[][4])
 		}
 		for(j=1;j<4;j++)
 		{
-			if(a[i][j-1]==a[i][j] && a[i][j-1])
-			{
-				a[i][j-1]+=1;
-				a[i][j]=0;
-				succeed=1;
-			}
 			if(a[i][j-1]==0)
 				for(k=j;k<4;k++)
 				{
 					a[i][k-1]=a[i][k];
 					a[i][k]=0;
 				}
+			
+			if(a[i][j-1]==a[i][j] && a[i][j-1])
+			{
+				a[i][j-1]+=1;
+				a[i][j]=0;
+				succeed=1;
+			}
 			
 		}
 	}
@@ -161,18 +167,20 @@ int move_right(int a[][4])
 		}
 		for(j=2;j>=0;j--)
 		{
+			
+			if(a[i][j+1]==0)
+				for(k=j+1;k>=1;k--)
+				{
+					a[i][k]=a[i][k-1];
+					a[i][k-1]=0;
+				}
+			
 			if(a[i][j+1]==a[i][j] && a[i][j+1]){
 				succeed=1;
 				a[i][j+1]+=1;
 				a[i][j]=0;
 					
 			}
-			if(a[i][j]==0)
-				for(k=j;k>=1;k--)
-				{
-					a[i][k]=a[i][k-1];
-					a[i][k-1]=0;
-				}
 			
 		}
 	}
