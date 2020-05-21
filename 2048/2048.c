@@ -1,294 +1,198 @@
+/************************** 22/05/2020 ******************************/
+/************************* QINGYAO WANG *****************************/
+/********************************************************************/
+/*
+
+	gcc 2048.c map.c ai.c eval.c $(sdl-config --cflags --libs)
+  	
+	il y a 4 modes que vous pouvez choisir
+	./a.out MANUAL
+	./a.out RANDOM
+	./a.out SIMPLE_AI
+	./a.out AI
+
+*/
+
 #include<stdio.h>
 #include<stdlib.h>
-#include<windows.h>
-void move_up(int a[][4])
-{
-	int i,j,k,n;
-	int flag=0;
-	for(j=0;j<4;j++)	//列
-	{
-		flag=0;
-		for(i=1;i<4;i++)	//行
-		{
-			n=4;
-			while(n--)
-			{
-				if(a[i-1][j]==0)
-				{
-					for(k=i;k<4;k++)
-					{
-						a[k-1][j]=a[k][j];
-						a[k][j]=0;
-					}
-				}
-			}
-		}
+#include <stdbool.h>
+#include<time.h>
+#include <SDL.h>
+#include "map.h"
+#include "eval.h"
+#include "ai.h"
 
-		for(i=1;i<4;i++)
-		{
-			n=4;
-			if(flag==0)
-			if(a[i-1][j]==a[i][j])
-			{
-				a[i-1][j]*=2;
-				a[i][j]=0;
-				flag=1;
-			}
-			while(n--)
-			{
-				if(a[i-1][j]==0)
-				for(k=i;k<4;k++)
-				{
-					a[k-1][j]=a[k][j];
-					a[k][j]=0;
-				}
-			}
-		}
-	}
-}
-void move_down(int a[][4])
-{
-	int i,j,k,n;
-	int flag=0;
-	for(j=0;j<4;j++)	//列
-	{
-		flag=0;
-		for(i=3;i>=1;i--)	//行
-		{
-			n=4;
-			while(n--)
-			{
-				if(a[i][j]==0)
-				{
-					for(k=i;k>=1;k--)
-					{
-						a[k][j]=a[k-1][j];
-						a[k-1][j]=0;
-					}
-				}
-			}
-		}
-		for(i=2;i>=0;i--)
-		{
-			n=4;
-			if(flag==0)
-			if(a[i+1][j]==a[i][j])
-			{
-				a[i+1][j]*=2;
-				a[i][j]=0;
-				flag=1;
-			}
-			while(n--)
-			{
-				if(a[i][j]==0)
-				for(k=i;k>=1;k--)
-				{
-					a[k][j]=a[k-1][j];
-					a[k-1][j]=0;
-				}
-			}
-		}
-	}
-}
-void move_left(int a[][4])
-{
-	int i,j,k,n;
-	int flag=0;
-	for(i=0;i<4;i++)	//行
-	{
-		flag=0;
-		for(j=1;j<4;j++)	//列
-		{
-			n=4;
-			while(n--)
-			{
-				if(a[i][j-1]==0)
-				{
-					for(k=j;k<4;k++)
-					{
-						a[i][k-1]=a[i][k];
-						a[i][k]=0;
-					}
-				}
-			}
-		}
-		for(j=1;j<4;j++)
-		{
-			n=4;
-			if(flag==0)
-			if(a[i][j-1]==a[i][j])
-			{
-				a[i][j-1]*=2;
-				a[i][j]=0;
-				flag=1;
-			}
-			while(n--)
-			{
-				if(a[i][j-1]==0)
-				for(k=j;k<4;k++)
-				{
-					a[i][k-1]=a[i][k];
-					a[i][k]=0;
-				}
-			}
-		}
-	}
-}
-void move_right(int a[][4])
-{
-	int i,j,k,n;
-	int flag=0;
-	for(i=0;i<4;i++)	//行
-	{
-		flag=0;
-		for(j=3;j>=1;j--)	// 列
-		{
-			n=4;
-			while(n--)
-			{
-				if(a[i][j]==0)
-				{
-					for(k=j;k>=1;k--)
-					{
-						a[i][k]=a[i][k-1];
-						a[i][k-1]=0;
-					}
-				}
-			}
-		}
-		for(j=2;j>=0;j--)
-		{
-			n=4;
-			if(flag==0)
-			if(a[i][j+1]==a[i][j])
-			{
-				a[i][j+1]*=2;
-				a[i][j]=0;
-				flag=1;
-			}
-			while(n--)
-			{
-				if(a[i][j]==0)
-				for(k=j;k>=1;k--)
-				{
-					a[i][k]=a[i][k-1];
-					a[i][k-1]=0;
-				}
-			}
-		}
-	}
-}
-void output(int a[][4])
-{
-    int i,j;
-  	char c;
-  	printf("\t2048\n");
-    printf("+");
-    for(j=0;j<4;j++)
-    {
-       printf("-----");
-    }
-    printf("+\n");
+#define SCREEN_WIDTH (480)
+#define SCREEN_HEIGHT (480)
+#define IMAGE_HEIGHT (120)
+#define IMAGE_WIDTH (120)
 
-    for(i=0;i<4;i++)
-    {
-        printf("|");
-       for(j=0;j<4;j++)
-        {
-           if(a[i][j]==0)
-          {
-              c='.';
-              printf("%5c",c);
-            }
-            else
-            {
-                 printf("%5d",a[i][j]);
-            }
-        }
-        printf("|\n\n");
-    }
+enum modes {
+    MANUAL=0,RANDOM=1,SIMPLE_AI=2,AI=3
+};
 
-    printf("+");
-    for(j=0;j<4;j++)
-    {
-        printf("-----");
-    }
-    printf("+\n");
-}
-void rand_value(int a[][4])	//检索为0的元素并赋值随机数
-{
-	int i,j;
-	int r,c;
-	srand(time(NULL));
-	A:
-		{
-			r=rand()%4;
-			c=rand()%4;
 
-			if(a[r][c]==0)
-				a[r][c]=rand()%4?2:4;
-			else{
-				goto A;
-				}
-		}
-	output(a);
-}
-int isEnd(int a[][4])
+int main(int argc, char *argv[])
 {
-	int i,j,cnt1=0,cnt2=0,cnt=0;
-	for(i=0;i<4;i++)	//判断是否所有元素非空
-		for(j=0;j<4;j++)
-		{
-			if(a[i][j]==2048)
-			{
-				printf("Good Job!");
-				return 0;
-			}
-			if(a[i][j]!=0) cnt++;
-		}
-	if(cnt==16)
-	{
-	for(j=0;j<4;j++)	//判断相邻行是否不等
-	{
-		for(i=1;i<4;i++)
-		if(a[i][j]!=a[i-1][j])
-			cnt1++;
-	}
-	for(i=0;i<4;i++)	//判断相邻列是否不等
-	{
-		for(j=1;j<4;j++)
-		if(a[i][j]!=a[i][j-1])
-			cnt2++;
-	}
-	cnt1+=cnt2;
-	if(cnt1==24)
-	{
-		system("cls");
-		printf("Game Over!");
-		return 0;
-	}
-	}
-	return 1;
-}
-int main()
-{
+	int mode=-1;
+	int best=0,total=0;
 	int a[4][4]={0};
-	int i,j,flag=1;
-	char ch;
-	rand_value(a);
-	while((ch=getch())&&flag)
-	{
-		switch(ch)
-		{
-			case 'w':
-				move_up(a);system("cls");rand_value(a);flag=isEnd(a);break;
-			case 's':
-				move_down(a);system("cls");rand_value(a);flag=isEnd(a);break;
-			case 'a':
-				move_left(a);system("cls");rand_value(a);flag=isEnd(a);break;
-			case 'd':
-				move_right(a);system("cls");rand_value(a);flag=isEnd(a);break;
-		}
+	int a_ori[4][4]={0};
+	
+	/*4 MODES DIFFERENTES*/
+	switch(argv[1][0]){
+	case 'M':mode=MANUAL;break;
+	case 'R':mode=RANDOM;break;
+	case 'S':mode=SIMPLE_AI;break;
+	case 'A':mode=AI;break;
+    	}
+    	int flip=1;
+
+	memset(a,0,sizeof(a));
+	memset(a_ori,-1,sizeof(a_ori));
+	int i,j,flag=1,go_on=1;
+	SDL_Surface *g_screenSurface = NULL ;
+	SDL_Surface * Image[12];
+	SDL_Rect src;
+	SDL_Rect dest;
+
+	/*load des images*/
+    	Image[0] = SDL_LoadBMP("0.bmp");
+	Image[1] = SDL_LoadBMP("2.bmp");
+	Image[2] = SDL_LoadBMP("4.bmp");
+	Image[3] = SDL_LoadBMP("8.bmp");
+	Image[4] = SDL_LoadBMP("16.bmp");
+	Image[5] = SDL_LoadBMP("32.bmp");
+	Image[6] = SDL_LoadBMP("64.bmp");
+	Image[7] = SDL_LoadBMP("128.bmp");
+	Image[8] = SDL_LoadBMP("256.bmp");
+	Image[9] = SDL_LoadBMP("512.bmp");
+	Image[10] = SDL_LoadBMP("1024.bmp");
+	Image[11] = SDL_LoadBMP("2048.bmp");
+    	src.x=0;
+    	src.y=0;
+    	src.w=IMAGE_WIDTH;
+    	src.h=IMAGE_HEIGHT;
+    	dest.w=IMAGE_WIDTH;
+   	dest.h=IMAGE_HEIGHT;
+
+
+    if (SDL_Init (SDL_INIT_VIDEO) < 0) {
+        printf ("Unable to init SDL: %s\n", SDL_GetError ()) ;
+        return (-1) ;
+    }
+
+    g_screenSurface = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 32, SDL_HWSURFACE | SDL_DOUBLEBUF) ;
+
+    if (g_screenSurface == NULL) {
+        printf("Unable to set %dx%d video: %s\n", SCREEN_WIDTH, SCREEN_HEIGHT,
+        SDL_GetError ()) ;
+        SDL_Quit () ;
+        return (-1) ;
+    }
+    /* Set the title of the window. */
+    SDL_WM_SetCaption ("Press ESC to quit.", NULL) ;
+
+    
+
+    while (go_on && flag) {
+        SDL_Event event ;
+
+        if (flip){
+            if (SDL_MUSTLOCK (g_screenSurface)) {
+                if (SDL_LockSurface(g_screenSurface) < 0) return (-5) ;
+            }
+
+            rand_value(a);
+            for (int i=0;i<4;i++){
+                for (int j=0;j<4;j++){
+		/*afficher les noveaux valeurs des cellules*/
+                    if (a[i][j]!=a_ori[i][j]){
+                            dest.x=j*IMAGE_WIDTH;
+                            dest.y=i*IMAGE_HEIGHT;
+                            SDL_BlitSurface(Image[a[i][j]],&src,g_screenSurface,&dest);
+                            a_ori[i][j]=a[i][j];
+                    }
+                }
+            }
+
+	    /*si le jeu est termine on affiche les resultats*/
+            flag = isEnd(a);
+	    if (!flag) {
+		score(a,&best,&total);
+		printf("BEST=%d, SCORE=%d\n",best,total);
+	    }
+
+            if (SDL_MUSTLOCK (g_screenSurface))
+                SDL_UnlockSurface (g_screenSurface) ;
+            SDL_Flip (g_screenSurface) ;
+            flip = 0;
+	    SDL_Delay(100);
+        }
+
+	/*MODE MANUAL*/
+	if (mode==MANUAL)
+		
+        /* on quite si on presse le bouton ESC.*/
+		if (SDL_PollEvent (&event)) {
+           		if (event.type == SDL_QUIT) go_on = 0 ;
+         		if (event.type == SDL_KEYDOWN) {
+              			switch (event.key.keysym.sym) {
+              			case SDLK_ESCAPE: go_on = 0 ; break ;
+                    		case SDLK_UP: flip = move_up(a); break ;
+                   		case SDLK_DOWN: flip = move_down(a);break ;
+                   		case SDLK_LEFT: flip = move_left(a);break ;
+                   	 	case SDLK_RIGHT: flip = move_right(a);break ;
+                    		default: break ;  /* Explicitly ignore. */
+                		}
+            		}
+		
+		 }      /* End of while (SDL_PollEvent (&event)). */
+
+
+	/*MODE RANDOM*/
+	if(mode==RANDOM){
+		srand(time(NULL));
+		while(!flip && isEnd(a)){
+			switch (rand()%4){
+               	 	case 0: flip = move_up(a); break ;
+                	case 1: flip = move_down(a);break ;
+                	case 2: flip = move_left(a);break ;
+                	case 3: flip = move_right(a);break ;
+			}
+		}	
 	}
+	
+
+	/*MODE AI*/
+	if(mode==AI){
+		switch (ai_next(a)){
+                case UP: flip = move_up(a); break ;
+                case DOWN: flip = move_down(a);break ;
+                case LEFT: flip = move_left(a);break ;
+                case RIGHT: flip = move_right(a);break ;
+		case QUIT: go_on = 0 ; break ;
+		}
+
+	}
+
+
+	/*MODE SIMPLE_AI*/
+	if(mode==SIMPLE_AI){
+		switch (simple_ai_next(a)){
+                case UP: flip = move_up(a); break ;
+                case DOWN: flip = move_down(a);break ;
+                case LEFT: flip = move_left(a);break ;
+                case RIGHT: flip = move_right(a);break ;
+		}
+
+	}
+    
+
+
+  }        /* End of while (go_on). */
+
+  SDL_FreeSurface (g_screenSurface) ;
+  SDL_Quit () ;
 	return 0;
 }
